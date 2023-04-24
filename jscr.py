@@ -16,17 +16,19 @@ class CameraRecorder:
 		self.video_duration = int(main_config["video_duration"]) * 60
 		self.output_directory = main_config["output_directory"]
 		self.process = None
+		self._print_update(f"main_config: {main_config}")
+		self._print_update(f"video duration: {self.video_duration}")
 
 	def _print_update(self, text):
 		print(f"[{self.name}] {text}")
 
 	def start_recording(self):
 		self._print_update("started recording")
-		_cmd = ["sleep", "10"]
 		cmd = f"ffmpeg -i '{self.url}' -vcodec copy -acodec aac -map 0 -f segment -segment_time {self.video_duration} -reset_timestamps 1 -strftime 1 -segment_format mp4 '{self.output_directory}/{self.name}-%Y-%m-%d_%H-%M-%S.mp4'"
+		#cmd = "sleep {self.video_duration}"
 		args = shlex.split(cmd)
 		self._print_update("=> " + str(args))
-		self.process = subprocess.Popen(_cmd)
+		self.process = subprocess.Popen(args)
 		self._print_update(self.process)
 
 	def is_recording(self):
@@ -43,7 +45,7 @@ class CameraRecorder:
 	def stop_recording(self):
 		self._print_update("stopped recording")
 		if self.check_recording():
-			self.process.send_signal(2) 	# SIGNINT
+			self.process.send_signal(2) 	# SIGINT
 
 	def ensure_recording(self):
 		self._print_update("ensuring recording")
@@ -73,11 +75,17 @@ def parse_config():
 
 	if len(config["camera"]) < 1:
 		raise SystemError("No cameras defined")
+	
+	print(config)
 	return config
+
+
+
 
 
 def main():
 	try:
+		print("X")
 		config = parse_config()
 	except Exception as e:
 		# {type(e).__name__}
@@ -90,6 +98,7 @@ def main():
 		#recorder.start_recording()
 		recorders.append(recorder)
 
+	# handle KeyboardInterrupt or something for the main loop to cleanly stop recording
 	while True:
 		for recorder in recorders:
 			recorder.ensure_recording()

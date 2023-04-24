@@ -1,5 +1,5 @@
 [main]
-video_duration   = 15			# in minutes
+video_duration   = 5			# in minutes
 output_directory = "./video/"
 
 [camera.corridoio]
