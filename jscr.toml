@@ -1,0 +1,21 @@
+[main]
+video_duration   = 15			# in minutes
+output_directory = "./video/"
+
+[camera.corridoio]
+hostname = "192.168.0.248"
+stream   = "/stream1"
+username = "jollino"
+password = "FYm7t)AMLxgE&A*xn=NcY44NBXZrpU"
+
+[camera.scale]
+hostname = "192.168.0.227"
+stream   = "/stream1"
+username = "jollino"
+password = "FYm7t)AMLxgE&A*xn=NcY44NBXZrpU"
+
+[camera.balcone]
+hostname = "192.168.0.224"
+stream   = "/stream1"
+username = "jollino"
+password = "FYm7t)AMLxgE&A*xn=NcY44NBXZrpU"
