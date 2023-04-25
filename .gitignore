@@ -1,0 +1,5 @@
+lib/
+bin/
+video/
+pyvenv.cfg
+.DS_Store
