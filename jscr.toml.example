@@ -3,20 +3,20 @@ video_duration   = 5			# in minutes
 output_directory = "./video/"
 ffmpeg_binary    = "ffmpeg"
 
-[camera.corridoio]
-hostname = "192.168.0.248"
+[camera.entrance]
+hostname = "192.168.1.155"
 stream   = "/stream1"
-username = "jollino"
-password = "FYm7t)AMLxgE&A*xn=NcY44NBXZrpU"
+username = "al"
+password = "%Th%heXTZ`F+9c8}"
 
-[camera.scale]
-hostname = "192.168.0.227"
-stream   = "/stream1"
-username = "jollino"
-password = "FYm7t)AMLxgE&A*xn=NcY44NBXZrpU"
+[camera.staircase]
+hostname = "192.168.1.169"
+stream   = "/"
+username = "john"
+password = ";ad?\D^!6{/vb>(D"
 
-[camera.balcone]
-hostname = "192.168.0.224"
-stream   = "/stream1"
-username = "jollino"
-password = "FYm7t)AMLxgE&A*xn=NcY44NBXZrpU"
+[camera.parkinglot]
+hostname = "192.168.1.28"
+stream   = "/streams/main"
+username = "jack"
+password = "5DMN*N6b(GH?'}=D"

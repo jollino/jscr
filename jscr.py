@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import os
+import schedule
 import shlex
 import subprocess
 import sys
 import time
 import tomllib
-from threading import Thread
 
 class CameraRecorder:
 	def __init__(self, camera_config, main_config):
@@ -73,6 +73,13 @@ def parse_config():
 			# TBI: create it?
 			raise NotADirectoryError(f"Output directory {config['main']['output_directory']} not found")
 
+	if "ffmpeg_binary" not in config["main"]:
+		config["main"]["ffmpeg_binary"] = "ffmpeg" # default
+	try:
+		subprocess.call([config["main"]["ffmpeg_binary"]], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	except FileNotFoundError:
+		raise FileNotFoundError(f"ffmpeg binary not found as '{config['main']['ffmpeg_binary']}'")
+
 	if len(config["camera"]) < 1:
 		raise SystemError("No cameras defined")
 	
@@ -85,7 +92,6 @@ def parse_config():
 
 def main():
 	try:
-		print("X")
 		config = parse_config()
 	except Exception as e:
 		# {type(e).__name__}
@@ -102,6 +108,7 @@ def main():
 	while True:
 		for recorder in recorders:
 			recorder.ensure_recording()
+		print("## WAITING ##")
 		time.sleep(1)
 
 	# 
