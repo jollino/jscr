@@ -1,6 +1,7 @@
 [main]
 video_duration   = 5			# in minutes
 output_directory = "./video/"
+ffmpeg_binary    = "ffmpeg"
 
 [camera.corridoio]
 hostname = "192.168.0.248"

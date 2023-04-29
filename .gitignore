@@ -3,3 +3,4 @@ bin/
 video/
 pyvenv.cfg
 .DS_Store
+jscr.toml
