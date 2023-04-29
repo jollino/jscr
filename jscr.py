@@ -15,6 +15,7 @@ class CameraRecorder:
 		self.url = f"rtsp://{self.config['username']}:{self.config['password']}@{self.config['hostname']}{self.config['stream']}"
 		self.video_duration = int(main_config["video_duration"]) * 60
 		self.output_directory = main_config["output_directory"]
+		self.ffmpeg_binary = main_config["ffmpeg_binary"]
 		self.process = None
 		self._print_update(f"main_config: {main_config}")
 		self._print_update(f"video duration: {self.video_duration}")
@@ -24,7 +25,7 @@ class CameraRecorder:
 
 	def start_recording(self):
 		self._print_update("started recording")
-		cmd = f"ffmpeg -i '{self.url}' -vcodec copy -acodec aac -map 0 -f segment -segment_time {self.video_duration} -reset_timestamps 1 -strftime 1 -segment_format mp4 '{self.output_directory}/{self.name}-%Y-%m-%d_%H-%M-%S.mp4'"
+		cmd = f"{self.ffmpeg_binary} -i '{self.url}' -vcodec copy -acodec aac -map 0 -f segment -segment_time {self.video_duration} -reset_timestamps 1 -strftime 1 -segment_format mp4 '{self.output_directory}/{self.name}-%Y-%m-%d_%H-%M-%S.mp4'"
 		#cmd = "sleep {self.video_duration}"
 		args = shlex.split(cmd)
 		self._print_update("=> " + str(args))
