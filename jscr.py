@@ -17,6 +17,7 @@ class CameraRecorder:
 		self.output_directory = main_config["output_directory"]
 		self.ffmpeg_binary = main_config["ffmpeg_binary"]
 		self.process = None
+		self.logfile = None
 		self._print_update(f"main_config: {main_config}")
 		self._print_update(f"video duration: {self.video_duration}")
 
@@ -25,11 +26,14 @@ class CameraRecorder:
 
 	def start_recording(self):
 		self._print_update("started recording")
-		cmd = f"{self.ffmpeg_binary} -i '{self.url}' -vcodec copy -acodec aac -map 0 -f segment -segment_time {self.video_duration} -reset_timestamps 1 -strftime 1 -segment_format mp4 '{self.output_directory}/{self.name}-%Y-%m-%d_%H-%M-%S.mp4'"
+		cmd  = f"{self.ffmpeg_binary} -i '{self.url}' -vcodec copy -acodec aac -map 0 "
+		cmd += f"-f segment -segment_time {self.video_duration} -reset_timestamps 1 -strftime 1 -segment_format mp4 "
+		cmd += f"'{self.output_directory}/{self.name}_%Y-%m-%d_%H-%M-%S.mp4'"
 		#cmd = "sleep {self.video_duration}"
 		args = shlex.split(cmd)
 		self._print_update("=> " + str(args))
-		self.process = subprocess.Popen(args)
+		with open(f"{self.output_directory}/_log_{self.name}.txt", "a") as self.logfile:
+			self.process = subprocess.Popen(args, stdout=self.logfile, stderr=self.logfile)
 		self._print_update(self.process)
 
 	def is_recording(self):
@@ -106,13 +110,20 @@ def main():
 		recorders.append(recorder)
 
 	# handle KeyboardInterrupt or something for the main loop to cleanly stop recording
-	while True:
+	# MAIN LOOP
+	try:
+		while True:
+			for recorder in recorders:
+				recorder.ensure_recording()
+			print("## WAITING " + time.strftime("%c") + " ##")
+			time.sleep(1)
+	except KeyboardInterrupt:
 		for recorder in recorders:
-			recorder.ensure_recording()
-		print("## WAITING ##")
-		time.sleep(1)
+			recorder.stop_recording()		# TBI: is this needed? on macOS all threads exit cleanly anyway
+		time.sleep(3)	# let's give it some time to cleanup
+		print("Exiting.")
 
-	# 
+
 
 if __name__ == '__main__':
 	main()
