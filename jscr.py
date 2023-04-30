@@ -18,8 +18,8 @@ class CameraRecorder:
 		self.ffmpeg_binary = main_config["ffmpeg_binary"]
 		self.process = None
 		self.logfile = None
-		self._print_update(f"main_config: {main_config}")
-		self._print_update(f"video duration: {self.video_duration}")
+		#self._print_update(f"main_config: {main_config}")
+		#self._print_update(f"video duration: {self.video_duration}")
 
 	def _print_update(self, text):
 		print(f"[{self.name}] {text}")
@@ -27,39 +27,39 @@ class CameraRecorder:
 	def start_recording(self):
 		self._print_update("started recording")
 		cmd  = f"{self.ffmpeg_binary} -i '{self.url}' -vcodec copy -acodec aac -map 0 "
+		cmd += f"-movflags +frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov "
 		cmd += f"-f segment -segment_time {self.video_duration} -reset_timestamps 1 -strftime 1 -segment_format mp4 "
 		cmd += f"'{self.output_directory}/{self.name}_%Y-%m-%d_%H-%M-%S.mp4'"
-		#cmd = "sleep {self.video_duration}"
 		args = shlex.split(cmd)
-		self._print_update("=> " + str(args))
+		#self._print_update("=> " + str(args))
 		with open(f"{self.output_directory}/_log_{self.name}.txt", "a") as self.logfile:
 			self.process = subprocess.Popen(args, stdout=self.logfile, stderr=self.logfile)
-		self._print_update(self.process)
+		#self._print_update(self.process)
 
 	def is_recording(self):
 		if self.process is None:
-			self._print_update("not created yet")
+			#self._print_update("not created yet")
 			return False
 		if self.process.poll() is None:
-			self._print_update("is recording")
+			#self._print_update("is recording")
 			return True
 		else:
-			self._print_update("is not recording")
+			#self._print_update("is not recording")
 			return False
 
 	def stop_recording(self):
 		self._print_update("stopped recording")
-		if self.check_recording():
+		if self.is_recording():
 			self.process.send_signal(2) 	# SIGINT
 
 	def ensure_recording(self):
-		self._print_update("ensuring recording")
+		#self._print_update("ensuring recording")
 		if not self.is_recording():
 			self.start_recording()
 
 	def cycle_recording(self):
 		self._print_update("cycling")
-		if self.check_recording():
+		if self.is_recording():
 			self.stop_recording()
 		self.start_recording()
 
@@ -88,11 +88,13 @@ def parse_config():
 	if len(config["camera"]) < 1:
 		raise SystemError("No cameras defined")
 	
-	print(config)
+	#print(config)
 	return config
 
 
 
+def heartbeat():
+	print(f"It's {time.strftime('%c')} and we're still alive...")
 
 
 def main():
@@ -105,25 +107,36 @@ def main():
 
 	recorders = []
 	for camera in config["camera"].items():
+		# recording is started by ensure_recording() in the main loop
+		print(f"Adding camera {camera[0]}")
 		recorder = CameraRecorder(camera, config["main"])
-		#recorder.start_recording()
 		recorders.append(recorder)
+	for recorder in recorders:
+		schedule.every().hour.at(":00").do(recorder.cycle_recording) # align to the hour
+
 
 	# handle KeyboardInterrupt or something for the main loop to cleanly stop recording
 	# MAIN LOOP
-	try:
-		while True:
-			for recorder in recorders:
-				recorder.ensure_recording()
-			print("## WAITING " + time.strftime("%c") + " ##")
-			time.sleep(1)
-	except KeyboardInterrupt:
-		for recorder in recorders:
-			recorder.stop_recording()		# TBI: is this needed? on macOS all threads exit cleanly anyway
-		time.sleep(3)	# let's give it some time to cleanup
-		print("Exiting.")
-
-
+	schedule.every().minute.do(heartbeat)
+	print("Entering main loop.")
+	while True:
+			# this is to make sure that ffmpeg is restarted in case it's accidentally killed
+			# and has the side effect of starting the recoring at the beginning
+			try: 
+				schedule.run_pending()
+				for recorder in recorders:
+					recorder.ensure_recording()
+				#print("## WAITING " + time.strftime("%c") + " ##")
+				#print(schedule.get_jobs())
+				time.sleep(1)
+			except KeyboardInterrupt:
+				# DISABLED stop_recording on exiting because it actually corrupts the last file.
+				# not doing it leaves them clean. TODO: figure out why, as it makes no sense...
+				# for recorder in recorders:
+				# 	recorder.stop_recording()
+				print("Exiting...")
+				time.sleep(2)
+				sys.exit()
 
 if __name__ == '__main__':
 	main()
