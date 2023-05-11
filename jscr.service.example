@@ -1,0 +1,27 @@
+# Example service file for jscr using systemd
+
+# Change/Rmeove After and Requires in [Unit] if you are not writing to an external or network disk.
+# Run the following to get the proper id (replacing '/media/usb2' as the actual mountpoint):
+# systemctl list-units | grep /media/usb2 | awk ' { print $1 }'
+#
+# Change User and ExecStart in [Service] accordingly
+#
+# Place this file (renamed as jscr.service) into /etc/systemd/system/myapp.service (644), then:
+# sudo systemctl daemon-reload
+# sudo systemctl enable jscr.service
+# sudo systemctl start jscr.service
+
+[Unit]
+Description=Start jscr
+After=mnt-mydisk.mount
+Requires=mnt-mydisk.mount
+
+[Service]
+Type=simple
+User=jscr
+ExecStart=/home/jscr/jscr/run.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
